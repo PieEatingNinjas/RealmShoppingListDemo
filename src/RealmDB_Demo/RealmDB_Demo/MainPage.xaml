@@ -32,6 +32,14 @@
                 </DataTemplate>
             </ListView.ItemTemplate>
         </ListView>
+        <Label Text="Things we don't have yet" Style="{DynamicResource TitleStyle}" />
+        <ListView ItemsSource="{Binding ThingsWeDontHaveYet}">
+            <ListView.ItemTemplate>
+                <DataTemplate>
+                    <SwitchCell Text="{Binding Name}" On="{Binding GotIt}"  />
+                </DataTemplate>
+            </ListView.ItemTemplate>
+        </ListView>
         <Button Text="Add item"
                 VerticalOptions="End"
                 Command="{Binding AddItemCommand}" />

@@ -1,8 +1,11 @@
-﻿using RealmDB_Demo.Models;
+﻿using Plugin.LocalNotifications;
+using RealmDB_Demo.Models;
 using Realms;
+using System;
 using System.ComponentModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Text;
 using System.Windows.Input;
 using Xamarin.Forms;
 
@@ -12,6 +15,8 @@ namespace RealmDB_Demo.ViewModels
     {
         readonly Realm realm;
         public IQueryable<Store> Stores { get; }
+
+        public IQueryable<ShoppingListItem> ThingsWeDontHaveYet => SelectedStore?.ShoppingListItems.Where(sli => !sli.GotIt);
 
         ICommand _AddStoreCommand;
         public ICommand AddStoreCommand => _AddStoreCommand ?? (_AddStoreCommand = new Command(OnAddStoreCommand));
@@ -30,6 +35,7 @@ namespace RealmDB_Demo.ViewModels
             {
                 _SelectedStore = value;
                 RaisePropertyChanged();
+                RaisePropertyChanged(nameof(ThingsWeDontHaveYet));
             }
         }
 
@@ -54,17 +60,26 @@ namespace RealmDB_Demo.ViewModels
 
         public MainPageViewModel()
         {
-            realm = Realm.GetInstance();
+            byte[] encryptionKey = new byte[64];
+            Encoding.UTF8.GetBytes("My super dooper encryption key").CopyTo(encryptionKey, 0);
+            var config = new RealmConfiguration("MyEncryptedRealm.db"); 
+            config.EncryptionKey = encryptionKey;
+
+            realm = Realm.GetInstance(config);
             Stores = realm.All<Store>();
+
+            IDisposable token = Stores.SubscribeForNotifications((sender, changes, error) =>
+            {
+                if (changes?.InsertedIndices.Any() ?? false)
+                    CrossLocalNotifications.Current.Show("Store added", "A new store has been added.");
+            });
         }
 
         private void OnAddStoreCommand(object obj)
         {
             Store s = new Store();
             s.Name = "[new]";
-
             realm.Write(() => realm.Add(s));
-
             Application.Current.MainPage.Navigation.PushAsync(new StoreDetailPage(s));
         }
 
@@ -76,9 +91,7 @@ namespace RealmDB_Demo.ViewModels
                 {
                     Store = SelectedStore
                 };
-
                 realm.Write(() => realm.Add(item));
-
                 Application.Current.MainPage.Navigation.PushAsync(new ShoppingItemDetailPage(item));
             }
         }
