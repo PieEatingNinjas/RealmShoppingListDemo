@@ -1,11 +1,13 @@
 ﻿using Plugin.LocalNotifications;
 using RealmDB_Demo.Models;
+using RealmDB_Demo.Settings;
 using Realms;
+using Realms.Sync;
 using System;
 using System.ComponentModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Text;
+using System.Threading.Tasks;
 using System.Windows.Input;
 using Xamarin.Forms;
 
@@ -13,8 +15,8 @@ namespace RealmDB_Demo.ViewModels
 {
     public class MainPageViewModel : INotifyPropertyChanged
     {
-        readonly Realm realm;
-        public IQueryable<Store> Stores { get; }
+        Realm realm;
+        public IQueryable<Store> Stores { get; private set; }
 
         public IQueryable<ShoppingListItem> ThingsWeDontHaveYet => SelectedStore?.ShoppingListItems.Where(sli => !sli.GotIt);
 
@@ -58,21 +60,74 @@ namespace RealmDB_Demo.ViewModels
             }
         }
 
+        private bool _IsLoading;
+
+        public bool IsLoading
+        {
+            get { return _IsLoading; }
+            set { _IsLoading = value; RaisePropertyChanged(); }
+        }
+
+
         public MainPageViewModel()
         {
-            byte[] encryptionKey = new byte[64];
-            Encoding.UTF8.GetBytes("My super dooper encryption key").CopyTo(encryptionKey, 0);
-            var config = new RealmConfiguration("MyEncryptedRealm.db"); 
-            config.EncryptionKey = encryptionKey;
+            Initialize();
+        }
 
-            realm = Realm.GetInstance(config);
+        private async Task Initialize()
+        {
+            IsLoading = true;
+            var user = await LoginUser();
+
+            var serverURL = new Uri(Connection.RealmServerUrl);
+
+            var configuration = new SyncConfiguration(user, serverURL);
+
+            realm = Realm.GetInstance(configuration);
+
             Stores = realm.All<Store>();
+
+            RaisePropertyChanged(nameof(Stores));
 
             IDisposable token = Stores.SubscribeForNotifications((sender, changes, error) =>
             {
                 if (changes?.InsertedIndices.Any() ?? false)
                     CrossLocalNotifications.Current.Show("Store added", "A new store has been added.");
             });
+            IsLoading = false;
+        }
+
+        private async Task<User> LoginUser()
+        {
+            try
+            {
+                User user = null;
+                User.ConfigurePersistence(UserPersistenceMode.Disabled);
+
+                if (User.AllLoggedIn.Count() > 1)
+                    foreach (var item in User.AllLoggedIn)
+                    {
+                        item.LogOut();
+                    }
+
+                user = User.Current;
+                if (user == null)
+                {
+                    var credentials = Credentials.UsernamePassword(Authentication.DefaultUser,
+                        Authentication.DefaultPassword, createUser: false);
+
+                    var authURL = new Uri(Connection.AuthUrl);
+                    user = await User.LoginAsync(credentials, authURL);
+                }
+
+                return user;
+            }
+            catch (Exception ex)
+            {
+
+
+            }
+            return null;
         }
 
         private void OnAddStoreCommand(object obj)
@@ -85,7 +140,7 @@ namespace RealmDB_Demo.ViewModels
 
         private void OnAddItemCommand(object obj)
         {
-            if(SelectedStore != null)
+            if (SelectedStore != null)
             {
                 var item = new ShoppingListItem()
                 {
