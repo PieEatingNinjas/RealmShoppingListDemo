@@ -1,0 +1,40 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:local="clr-namespace:RealmDB_Demo"
+             x:Class="RealmDB_Demo.MainPage"
+             Title="Shopping list">
+    <StackLayout>
+        <Label Text="Stores" Style="{DynamicResource TitleStyle}"/>
+        <StackLayout Orientation="Horizontal">
+            <ListView ItemsSource="{Binding Stores}" HeightRequest="100"
+                    VerticalOptions="Start"
+                    SelectedItem="{Binding SelectedStore}"
+                    HorizontalOptions="StartAndExpand">
+                <ListView.ItemTemplate>
+                    <DataTemplate>
+                        <TextCell Text="{Binding Name}" />
+                    </DataTemplate>
+                </ListView.ItemTemplate>
+            </ListView>
+            <Button Text="+"
+                    VerticalOptions="Center"
+                    HorizontalOptions="End"
+                    Command="{Binding AddStoreCommand}" />
+        </StackLayout>
+        <Label Text="Items" Style="{DynamicResource TitleStyle}" />
+        <ListView ItemsSource="{Binding SelectedStore.ShoppingListItems}"
+                  VerticalOptions="FillAndExpand"
+                  SelectedItem="{Binding SelectedShoppingItem}">
+            <ListView.ItemTemplate>
+                <DataTemplate>
+                    <SwitchCell Text="{Binding Name}" On="{Binding GotIt}"  />
+                </DataTemplate>
+            </ListView.ItemTemplate>
+        </ListView>
+        <Button Text="Add item"
+                VerticalOptions="End"
+                Command="{Binding AddItemCommand}" />
+        
+    </StackLayout>
+</ContentPage>
