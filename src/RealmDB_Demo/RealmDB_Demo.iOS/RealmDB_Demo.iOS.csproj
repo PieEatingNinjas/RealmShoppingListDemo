@@ -152,10 +152,16 @@
       <HintPath>..\..\packages\Xamarin.Forms.2.3.4.270\lib\Xamarin.iOS10\Xamarin.Forms.Xaml.dll</HintPath>
     </Reference>
     <Reference Include="Xamarin.iOS" />
+    <Reference Include="Newtonsoft.Json">
+      <HintPath>..\..\packages\Newtonsoft.Json.9.0.1\lib\portable-net45+wp80+win8+wpa81\Newtonsoft.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="Realm.Sync">
+      <HintPath>..\..\packages\Realm.1.6.0\lib\netstandard1.4\Realm.Sync.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\RealmDB_Demo\RealmDB_Demo.csproj">
-      <Project>{43ce0b32-ef25-4329-a656-088a96c2e0da}</Project>
+      <Project>{88107EB4-4DCC-4824-8E19-401F0AEB1B58}</Project>
       <Name>RealmDB_Demo</Name>
     </ProjectReference>
   </ItemGroup>
@@ -174,4 +180,5 @@
   </Target>
   <Import Project="..\..\packages\Fody.2.0.6\build\netstandard1.4\Fody.targets" Condition="Exists('..\..\packages\Fody.2.0.6\build\netstandard1.4\Fody.targets')" />
   <Import Project="..\..\packages\Realm.Database.1.6.0\build\Realm.Database.targets" Condition="Exists('..\..\packages\Realm.Database.1.6.0\build\Realm.Database.targets')" />
+  <Import Project="..\..\packages\Realm.1.6.0\build\Realm.targets" Condition="Exists('..\..\packages\Realm.1.6.0\build\Realm.targets')" />
 </Project>
